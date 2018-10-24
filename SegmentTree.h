@@ -2,7 +2,6 @@
 #define SEGMENT_TREE_H
 
 #include <type_traits>
-#include <iterator>
 
 namespace SegmentTree
 {
@@ -13,7 +12,7 @@ namespace SegmentTree
 		{
 			static_assert( std::is_integral<T>::value, "Integral type required." );
 			using UT = std::remove_cv_t<std::make_unsigned_t<T>>;
-			UT v = static_cast<UT>( value );
+			auto v = static_cast<UT>( value );
 			--v;
 			v |= v >> 1;
 			v |= v >> 2;
@@ -24,21 +23,21 @@ namespace SegmentTree
 				v |= v >> 16;
 			if (sizeof( v ) >= 8)
 				v |= v >> 32;
-			return ++v;
+			return static_cast<T>( ++v );
 		}
 
 
-		template <typename It, typename BinaryOp>
-		auto get_range( It from, It to, It range_begin, It range_end, It level, It node, typename std::iterator_traits<It>::difference_type range_size, BinaryOp op )
+		template <typename It, typename T, typename BinaryOp>
+		auto get_range( It from, It to, It range_begin, It range_end, It level, It node, T level_size, BinaryOp op )
 		{
 			// Check complete match of the interval to the current range.
 			if (from == range_begin && to == range_end)
 				return *node;
 
 			// Move down to the child nodes.
-			range_size <<= 1;
+			level_size <<= 1;
 			auto const node_index = (node - level) << 1;
-			level -= range_size;
+			level -= level_size;
 			node   = level + node_index;
 
 			// Calculate child range.
@@ -46,13 +45,13 @@ namespace SegmentTree
 
 			// Check if the interval is completely owned by one of the child nodes.
 			if (from >= range_mid)
-				return get_range( from, to, range_mid, range_end, level, ++node, range_size, op );
+				return get_range( from, to, range_mid, range_end, level, ++node, level_size, op );
 			if (to <= range_mid)
-				return get_range( from, to, range_begin, range_mid, level, node, range_size, op );
+				return get_range( from, to, range_begin, range_mid, level, node, level_size, op );
 
 			// General case: divide interval by the child nodes.
-			auto const left  = get_range( from, range_mid, range_begin, range_mid, level, node, range_size, op );
-			auto const right = get_range( range_mid, to, range_mid, range_end, level, ++node, range_size, op );
+			auto const left  = get_range( from, range_mid, range_begin, range_mid, level, node, level_size, op );
+			auto const right = get_range( range_mid, to, range_mid, range_end, level, ++node, level_size, op );
 			return op( left, right );
 		}
 	}  // namespace Details
@@ -115,7 +114,7 @@ namespace SegmentTree
 		auto const range_begin = segment_tree.begin();
 		auto const range_end   = range_begin + ((segment_tree.size() + 1) >> 1);
 		auto const root        = segment_tree.end() - 1;
-		return Details::get_range( from, to, range_begin, range_end, root, root, 1, op );
+		return Details::get_range( from, to, range_begin, range_end, root, root, segment_tree.end() - root, op );
 	}
 }  // namespace SegmentTree
 
