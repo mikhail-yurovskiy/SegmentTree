@@ -1,5 +1,5 @@
-#ifndef SEGMENTTREE_H
-#define SEGMENTTREE_H
+#ifndef SEGMENT_TREE_H
+#define SEGMENT_TREE_H
 
 #include <type_traits>
 #include <iterator>
@@ -119,4 +119,4 @@ namespace SegmentTree
 	}
 }  // namespace SegmentTree
 
-#endif //SEGMENTTREE_H
+#endif  // SEGMENT_TREE_H
