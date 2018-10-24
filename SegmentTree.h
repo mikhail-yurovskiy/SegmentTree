@@ -83,10 +83,28 @@ namespace SegmentTree
 	}
 
 
-	template <typename Container, typename BinaryOp>
-	void modify( Container& segment_tree, typename Container::iterator pos, typename Container::value_type&& value, BinaryOp op )
+	template <typename Container, typename T, typename BinaryOp>
+	void modify( Container& segment_tree, typename Container::iterator pos, T const& value, BinaryOp op )
 	{
-		// TODO
+		// Modify the leaf itself.
+		*pos = value;
+
+		// Go up to the root modifying affected nodes.
+		auto level_begin = segment_tree.begin();
+		for (auto level_size  = (segment_tree.size() + 1) >> 1; level_size > 1; level_size >>= 1)
+		{
+			// Calculate position in the current tree level and find the sibling with the common parent.
+			auto const position = pos - level_begin;
+			auto const sibling  = level_begin + (position ^ 1);
+
+			// Level up, find the new position.
+			level_begin += level_size;
+			auto new_pos = level_begin + (position >> 1);
+
+			// Assign the new value and continue.
+			*new_pos = op( *pos, *sibling );
+			pos = new_pos;
+		}
 	}
 
 
